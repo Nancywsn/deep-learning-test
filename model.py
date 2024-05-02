@@ -145,16 +145,17 @@ class NeuralNetwork:
         )
         
     def load(self, filename):
-        npz_members = np.load(os.path.join(os.curdir, 'models', filename), allow_pickle=True)
+        npz_members = np.load(os.path.join(os.curdir, 'parameter', filename), allow_pickle=True)
 
-        self.weights = list(npz_members['weights'])
-        self.biases = list(npz_members['biases'])
+        # print('test', npz_members['weights0'].shape, npz_members['weights1'].shape)
+        self.weights = [npz_members['weights0']]+[npz_members['weights1']]+[npz_members['weights2']]
+        self.biases = [npz_members['biases0']]+[npz_members['biases1']]+[npz_members['biases2']]
 
         self.sizes = [b.shape[0] for b in self.biases]
         self.num_layers = len(self.sizes)
 
-        self.linear_transforms = list(npz_members['linear_transforms'])
-        self.activations = list(npz_members['activations'])
+        self.linear_transforms = [npz_members['linear_transforms0']]+[npz_members['linear_transforms1']]+[npz_members['linear_transforms2']]
+        self.activations = [npz_members['activations0']]+[npz_members['activations1']]+[npz_members['activations2']]
 
     def test(self, Xtest, Ytest):
         n = Xtest.shape[0]

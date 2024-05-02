@@ -33,28 +33,28 @@ batch_size = 16
 epochs= 30
 
 # 训练模型
-print('Training models...')
-best_config = {'accuracy': 0}
-for layer in layers:
-    for learning_rate in learning_rates:
-        for weight_decay in weight_decaies:
-            print(f"**Current layer: {layer}, Current learning rate: {learning_rate}, Current weight decay: {weight_decay}")
-            nn = NeuralNetwork(layer)
-            optimizer = SGD(nn, learning_rate, weight_decay, batch_size)
-            accuracy = nn.train(normaliz(X_train), trans_y(y_train), normaliz(X_test), trans_y(y_test), epochs, optimizer)
-            if accuracy > best_config['accuracy']:
-                best_config['accuracy'] = accuracy
-                best_config['layer'] = layer
-                best_config['learning_rate'] = learning_rate
-                best_config['weight_decay'] = weight_decay
+# print('Training models...')
+# best_config = {'accuracy': 0}
+# for layer in layers:
+#     for learning_rate in learning_rates:
+#         for weight_decay in weight_decaies:
+#             print(f"**Current layer: {layer}, Current learning rate: {learning_rate}, Current weight decay: {weight_decay}")
+#             nn = NeuralNetwork(layer)
+#             optimizer = SGD(nn, learning_rate, weight_decay, batch_size)
+#             accuracy = nn.train(normaliz(X_train), trans_y(y_train), normaliz(X_test), trans_y(y_test), epochs, optimizer)
+#             if accuracy > best_config['accuracy']:
+#                 best_config['accuracy'] = accuracy
+#                 best_config['layer'] = layer
+#                 best_config['learning_rate'] = learning_rate
+#                 best_config['weight_decay'] = weight_decay
              
-print(best_config)
-# {'accuracy': 88.64999999999999, 'layer': [784, 128, 10], 'learning_rate': 0.02, 'weight_decay': 0}
+# print(best_config)
+best_config = {'accuracy': 88.64999999999999, 'layer': [784, 128, 10], 'learning_rate': 0.02, 'weight_decay': 0}
 
 # 加载模型
 print("Testing...")
 nn = NeuralNetwork(best_config['layer'])
-nn.load(f"model_{best_config['layer'][1]}_{best_config['learning_rate']}_{best_config['weight_decay']}.npz")
+nn.load(f"model_{best_config['layer'][1]}_{best_config['learning_rate']}_{best_config['weight_decay']}.npy.npz")
 nn.test(normaliz(X_test), trans_y(y_test))
 
 # 可视化
