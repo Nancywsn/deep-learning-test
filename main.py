@@ -49,6 +49,7 @@ for layer in layers:
                 best_config['weight_decay'] = weight_decay
              
 print(best_config)
+# {'accuracy': 88.64999999999999, 'layer': [784, 128, 10], 'learning_rate': 0.02, 'weight_decay': 0}
 
 # 加载模型
 print("Testing...")

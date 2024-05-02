@@ -77,14 +77,14 @@ class NeuralNetwork:
             # 测试模型
             validate_loss = 0 # 交叉熵损失
             res = []
-            for i in range(m):
+            for i in range(n):
                 input, label = Xtest[i], Ytest[i]
                 input = input.reshape(784,1)
                 label = label.reshape(10,1)
                 output = self.forward(input)
                 validate_loss += np.where(label==1, -np.log(output), 0).sum()
                 res.append(np.argmax(output) == np.argmax(label))
-            validate_loss /= m
+            validate_loss /= n
             validate_losses.append(validate_loss)
             accuracy = sum(res) / n * 100
             accuracies.append(accuracy)
@@ -130,10 +130,18 @@ class NeuralNetwork:
     def save(self, filename):
         np.savez_compressed(
             file=os.path.join(os.curdir, 'parameter', filename),
-            weights=self.weights,
-            biases=self.biases,
-            linear_transforms=self.linear_transforms,
-            activations=self.activations
+            weights0=self.weights[0],
+            weights1=self.weights[1],
+            weights2=self.weights[2],
+            biases0=self.biases[0],
+            biases1=self.biases[1],
+            biases2=self.biases[2],
+            linear_transforms0=self.linear_transforms[0],
+            linear_transforms1=self.linear_transforms[1],
+            linear_transforms2=self.linear_transforms[2],
+            activations0=self.activations[0],
+            activations1=self.activations[1],
+            activations2=self.activations[2]
         )
         
     def load(self, filename):
