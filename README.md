@@ -9,3 +9,7 @@ python main.py
 * model.py: 模型训练
 * optimizer.py: SGD优化器
 * visualization.py: 模型参数可视化
+* main.py: 主程序，查找最优超参数
+* logs文件夹存放每次训练的模型参数，为可视化做准备
+* figs文件夹存放可视化结果
+* parameter文件夹保存模型权重
