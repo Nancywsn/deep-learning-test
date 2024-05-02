@@ -3,7 +3,7 @@
 <p>存放在本项目的data/fashion文件夹中</p>
 ## 运行方式
 python main.py
-# 代码解释
+## 代码解释
 * mnist_reader.py: 读取数据
 * model.py: 模型训练
 * optimizer.py: SGD优化器
