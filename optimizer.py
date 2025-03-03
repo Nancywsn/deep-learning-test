@@ -23,5 +23,6 @@ class SGD:
     def step(self):
         # 参数更新
         # 使用batch gradient descent，因此学习率要除以batch_size
+        # (1 - self.lr * self.weight_decay) * w: 这是L2正则化的核心部分，它通过乘以一个小于1的因子来衰减权重
         self.model.weights = [(1 - self.lr * self.weight_decay) * w - (self.lr / self.batch_size) * dw for w, dw in zip(self.model.weights, self.nabla_w)]
         self.model.biases = [(1 - self.lr * self.weight_decay) * b - (self.lr / self.batch_size) * db for b, db in zip(self.model.biases, self.nabla_b)]
