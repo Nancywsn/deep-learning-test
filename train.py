@@ -17,11 +17,11 @@ y_train_onehot, y_test_onehot = dataset.one_hot_encode_labels(y_train, y_test)
 # layers = [[784, 32, 10], [784, 64, 10], [784, 128, 10]]
 # weight_decaies = [0, 1e-2, 2e-2] # L2 Penalty
 # learning_rates = [5e-3, 1e-2, 2e-2]
-layers = [[784, 256, 128, 10]]
-weight_decaies = [1e-4, 2e-2] # L2 Penalty
-learning_rates = [1e-2, 0]
+layers = [[784,256,128, 10]]
+weight_decaies = [0.01] # L2 Penalty
+learning_rates = [0.01]
 batch_size = 64
-epochs= 30
+epochs= 50
 
 # 训练模型
 print('Training models...')
@@ -40,16 +40,3 @@ for layer in layers:
                 best_config['weight_decay'] = weight_decay
              
 print(best_config)
-
-# best_config = {'accuracy': 88.64999999999999, 'layer': [784, 128, 10], 'learning_rate': 0.02, 'weight_decay': 0}
-
-# 加载模型
-# print("Testing...")
-# nn = NeuralNetwork(best_config['layer'])
-# nn.load(f"model_{best_config['layer'][1]}_{best_config['learning_rate']}_{best_config['weight_decay']}.npy.npz")
-# nn.test(X_test, y_test_onehot)
-
-# 可视化
-print("Visualizing...")
-log = pd.read_csv(f"logs/log_{best_config['layer'][1]}_{best_config['learning_rate']}_{best_config['weight_decay']}.csv")
-visualization.visualize(nn, log)

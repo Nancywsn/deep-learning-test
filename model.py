@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import random
 
+
 # 设置随机种子，确保结果可复现
 np.random.seed(0)
 
@@ -17,13 +18,9 @@ class NeuralNetwork:
         self.sizes = sizes
         self.num_layers = len(sizes)
         # 初始化权重，输入层没有权重和偏置,权重是从第一个隐藏层开始的
-        # [array(1,), array(32,784), array(10, 32)]
         self.weights = [np.array([0])] + [np.random.randn(y, x)/np.sqrt(x) for y, x in zip(sizes[1:], sizes[:-1])] # 存储神经网络中每一层的权重矩阵
-        # [array(1), array(32), array(10)]
         self.biases = [np.array([0])] + [np.random.randn(x, 1) for x in sizes[1:]] 
-        # 存储线性变换的结果: [array(1,), array(32,1), array(10, 1)]
         self.linear_transforms = [np.zeros(bias.shape) for bias in self.biases]
-        # 存储非线性变换的结果: [array(1,), array(32,1), array(10, 1)]
         self.activations = [np.zeros(bias.shape) for bias in self.biases]
         
     def forward(self, input):
@@ -42,6 +39,9 @@ class NeuralNetwork:
                 self.activations[i] = softmax(self.linear_transforms[i]) # 输出层使用 Softmax 激活函数
             else:
                 self.activations[i] = relu(self.linear_transforms[i]) # 隐藏层使用 ReLU 激活函数
+                # self.activations[i] = tanh(self.linear_transforms[i]) # 隐藏层使用 ReLU 激活函数
+                # self.activations[i] = leaky_relu(self.linear_transforms[i]) # 隐藏层使用 ReLU 激活函数
+
         return self.activations[-1] # 返回输出层的激活值
     
     def backward(self, loss_gradient):
@@ -61,7 +61,9 @@ class NeuralNetwork:
         for layer in range(self.num_layers-2, 0, -1):
             loss_gradient = np.multiply(
                 self.weights[layer+1].transpose().dot(loss_gradient),
+                # leaky_relu_gradient(self.linear_transforms[layer])
                 relu_gradient(self.linear_transforms[layer])
+                # tanh_gradient(self.linear_transforms[layer])
             )
             nabla_b[layer] = loss_gradient
             nabla_w[layer] = loss_gradient.dot(self.activations[layer-1].transpose())
@@ -138,47 +140,110 @@ class NeuralNetwork:
         pd.DataFrame(data).to_csv(f'logs/log_{self.sizes[1]}_{optimizer.lr}_{optimizer.weight_decay}.csv',)
         return best_accuracy
     
+    # def save(self, filename):
+    #     np.savez_compressed(
+    #         file=os.path.join(os.curdir, 'parameter', filename),
+    #         weights0=self.weights[0],
+    #         weights1=self.weights[1],
+    #         weights2=self.weights[2],
+    #         biases0=self.biases[0],
+    #         biases1=self.biases[1],
+    #         biases2=self.biases[2],
+    #         linear_transforms0=self.linear_transforms[0],
+    #         linear_transforms1=self.linear_transforms[1],
+    #         linear_transforms2=self.linear_transforms[2],
+    #         activations0=self.activations[0],
+    #         activations1=self.activations[1],
+    #         activations2=self.activations[2]
+    #     )
+
     def save(self, filename):
-        np.savez_compressed(
-            file=os.path.join(os.curdir, 'parameter', filename),
-            weights0=self.weights[0],
-            weights1=self.weights[1],
-            weights2=self.weights[2],
-            biases0=self.biases[0],
-            biases1=self.biases[1],
-            biases2=self.biases[2],
-            linear_transforms0=self.linear_transforms[0],
-            linear_transforms1=self.linear_transforms[1],
-            linear_transforms2=self.linear_transforms[2],
-            activations0=self.activations[0],
-            activations1=self.activations[1],
-            activations2=self.activations[2]
-        )
+        save_path = os.path.join(os.curdir, 'parameter', filename)
+        save_dict = {}
+
+        for i, (weight, bias) in enumerate(zip(self.weights, self.biases)):
+            save_dict[f'weights{i}'] = weight
+            save_dict[f'biases{i}'] = bias
         
+        # 保存线性变换和激活函数
+        if hasattr(self, 'linear_transforms'):
+            for i, linear_transform in enumerate(self.linear_transforms):
+                save_dict[f'linear_transforms{i}'] = linear_transform
+        
+        if hasattr(self, 'activations'):
+            for i, activation in enumerate(self.activations):
+                save_dict[f'activations{i}'] = activation
+        
+        # 保存到文件
+        np.savez_compressed(file=save_path, **save_dict)
+
+
+        
+    # def load(self, filename):
+    #     npz_members = np.load(os.path.join(os.curdir, 'parameter', filename), allow_pickle=True)
+
+    #     # print('test', npz_members['weights0'].shape, npz_members['weights1'].shape)
+    #     self.weights = [npz_members['weights0']]+[npz_members['weights1']]+[npz_members['weights2']]
+    #     self.biases = [npz_members['biases0']]+[npz_members['biases1']]+[npz_members['biases2']]
+
+    #     self.sizes = [b.shape[0] for b in self.biases]
+    #     self.num_layers = len(self.sizes)
+
+    #     self.linear_transforms = [npz_members['linear_transforms0']]+[npz_members['linear_transforms1']]+[npz_members['linear_transforms2']]
+    #     self.activations = [npz_members['activations0']]+[npz_members['activations1']]+[npz_members['activations2']]
+
     def load(self, filename):
-        npz_members = np.load(os.path.join(os.curdir, 'parameter', filename), allow_pickle=True)
+        load_path = os.path.join(os.curdir, 'parameter', filename)
+        npz_members = np.load(load_path, allow_pickle=True)
+        
+        # 动态加载权重和偏置
+        self.weights = []
+        self.biases = []
+        for key in sorted(npz_members.keys()):
+            if key.startswith('weights'):
+                self.weights.append(npz_members[key])
+            elif key.startswith('biases'):
+                self.biases.append(npz_members[key])
 
-        # print('test', npz_members['weights0'].shape, npz_members['weights1'].shape)
-        self.weights = [npz_members['weights0']]+[npz_members['weights1']]+[npz_members['weights2']]
-        self.biases = [npz_members['biases0']]+[npz_members['biases1']]+[npz_members['biases2']]
-
+        self.linear_transforms = []
+        self.activations = []
+        for key in sorted(npz_members.keys()):
+            if key.startswith('linear_transforms'):
+                self.linear_transforms.append(npz_members[key])
+            elif key.startswith('activations'):
+                self.activations.append(npz_members[key])
+        
+        # 更新网络结构信息
         self.sizes = [b.shape[0] for b in self.biases]
         self.num_layers = len(self.sizes)
-
-        self.linear_transforms = [npz_members['linear_transforms0']]+[npz_members['linear_transforms1']]+[npz_members['linear_transforms2']]
-        self.activations = [npz_members['activations0']]+[npz_members['activations1']]+[npz_members['activations2']]
 
     def test(self, Xtest, Ytest):
         n = Xtest.shape[0]
         res = []
+        # correct_cases = []
+        incorrect_cases = []
+        y_true = []
+        y_pred = []
+
         for i in range(n):
             input, label = Xtest[i], Ytest[i]
-            input = input.reshape(784,1)
-            label = label.reshape(10,1)
+            input = input.reshape(784, 1)
+            label = label.reshape(10, 1)
             output = self.forward(input)
-            res.append(np.argmax(output) == np.argmax(label))
+            prediction = np.argmax(output)
+            true_label = np.argmax(label)
+            y_true.append(true_label)
+            y_pred.append(prediction)
+
+            if prediction != true_label:
+                incorrect_cases.append((input, true_label, prediction))
+
+            res.append(prediction == true_label)
+
         accuracy = sum(res) / n * 100
-        print(f"****Test accuracy {accuracy} %.")
+        print(f"****Test accuracy {accuracy:.2f} %.")  # 打印测试准确率
+
+        return incorrect_cases, y_true, y_pred
 
 ########################################################################################
 
@@ -197,6 +262,17 @@ def relu(input):
 def relu_gradient(input):
     return input > 0
 
+def leaky_relu(input, alpha=0.01):
+    return np.where(input >= 0, input, alpha * input)
+
+def leaky_relu_gradient(input, alpha=0.01):
+    return np.where(input >= 0, 1, alpha)
+
+def tanh(input):
+    return np.tanh(input)
+
+def tanh_gradient(input):
+    return 1 - np.tanh(input) ** 2
 
 def softmax(input):
     return np.exp(input) / np.sum(np.exp(input))
