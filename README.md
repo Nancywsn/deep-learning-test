@@ -1,3 +1,4 @@
+神经网络的numpy实现
 ## 运行方式
 ```
 python train.py
